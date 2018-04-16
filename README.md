@@ -13,6 +13,10 @@ sudo apt-get install -y nodejs
 
 ## Debian Packages
 
+```
+apt-get install ffmpeg
+```
+
 - libxi-devel
 - xserver-xorg-dev
 - ? libxext-dev
