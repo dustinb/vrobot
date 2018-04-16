@@ -1,0 +1,15 @@
+{
+  "name": "vrobot",
+  "version": "1.0.0",
+  "description": "Video making robot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dustin Butler <dustin@fivetechnology.com>",
+  "license": "ISC",
+  "dependencies": {
+    "await": "^0.2.6",
+    "ffmpeg-concat": "^1.0.4"
+  }
+}
