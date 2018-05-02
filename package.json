@@ -10,6 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "await": "^0.2.6",
-    "ffmpeg-concat": "^1.0.4"
+    "cheerio": "^1.0.0-rc.2",
+    "md5": "^2.2.1",
+    "request": "^2.85.0"
   }
 }

@@ -14,3 +14,5 @@ Adding audio track and keeping the original by mixing them
 
 `melt FILE0004.00.05.00-00.05.15.mp4 -audio-track Justice_Little_League.mp3 out=900 -transition mix a_track=0 b_track=1 -consumer avformat:audiotest.mp4`
 
+https://www.luckydinosaur.com/u/ffmpeg-scene-change-detector
+
