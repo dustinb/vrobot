@@ -43,7 +43,7 @@ module.exports = {
         return;
       }
 
-      fs.writeFile(data.md5 + '.html', html, function() {});
+      //fs.writeFile(data.md5 + '.html', html, function() {});
 
       done(html, data);
     });

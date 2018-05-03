@@ -1,39 +1,71 @@
-## Headless Server Test
+# Video Robot
+
+Take a folder with some videos (maybe photos) in it, select some parts of them and add some music.
+
+# Installation
 
 ```
-apt-get install ffmpeg Xvfb mesa-utils screen git
+apt-get update
+apt-get install git ffmpeg melt curl sudo
 
-# Node JS 
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-# A test script and package.json
 git clone https://github.com/dustinb/vrobot.git
+cd vrobot
 npm install
-
-# Run display in background using screen
-screen
-Xvfb :0 -screen 0 1280x1024x16
-    
-# Detach
-(CTRL-A d)
-  
-# Test OpenGL works  
-export DISPLAY=:0
-glxinfo | grep "OpenGL version"
-OpenGL version string: 3.0 Mesa 13.0.6
-
-# Try it
-node index.js
-{ cmd: 'ffmpeg -i cut2.mp4 -y -pix_fmt rgba -start_number 0 /tmp/638b43fa0389f1e380c55a774fc10f42/scene-1-%012d.raw' }
-{ cmd: 'ffmpeg -i cut1.mp4 -y -pix_fmt rgba -start_number 0 /tmp/638b43fa0389f1e380c55a774fc10f42/scene-0-%012d.raw' }
-init-frames: 9637.808ms
 ```
 
-## Cutting Video
+# Make A Video
 
-    ffmpeg -ss 120 -i FILE0004.MP4 -t 15 -c copy cut1.mp4
-    ffmpeg -ss 180 -i FILE0004.MP4 -t 8 -c copy cut2.mp4
+`node vidjeo [directory]`
+
+# Configuration
+
+| Config      | Description                              | Default |
+|-------------|------------------------------------------|---------|   
+| pointLength | Chop the video into parts of this length | 5       |
+| clipLength  | Preferred clip length between transitions| 10      |
+| finalLength | Approx. final video length in seconds    | 120     |
+| _keepAudio_ | Keep the original audio track            | true    | 
+| _genre_     | Type of music                            | Hip Hop |
+
+# MLT Framework
+
+Uses [ffmpeg/ffprobe](https://www.ffmpeg.org/) for getting video information and the melt command from [MLT Framework](https://www.mltframework.org/) 
+to do the video editing. 
+
+# Clip Selection
+
+Each video is cut into sections of `pointLength`.  These sections are weighted using proprietary formula (a random number).
+The points with highest weight are used as mid points for clips of `clipLength` +/- some randomness.
+
+Idea is to add weighting based on _speed_, _altitude change_, and _gyro_ data.  Something small and based on arduino like
+[gpstag](https://github.com/dustinb/gpstag).
+
+MLT provides other filers like speed up that can be used to add variety based on the data.
+
+# Various Commands
+
+Cut part of video
+
+`melt FILE0004.MP4 in=00:05:00.00 out=00:05:15.00 -consumer avformat:FILE0004.00.05.00-00.05.15.mp4`
+
+Add 2 videos with transition and stabalize filter
+
+`melt cut1.mp4 cut2.mp4 -mix 100 -mixer luma -filter videostab2 -consumer avformat:splice.mp4`
+
+Video duration, remove -sexagesimal for seconds
+
+`ffprobe -v error -show_entries format=duration -sexagesimal -of default=noprint_wrappers=1:nokey=1 cut1.mp4`
+
+Number of frames
+
+`ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 FILE0028.MP4`
+
+Adding audio track and keeping the original by mixing them
+
+`melt FILE0004.00.05.00-00.05.15.mp4 -audio-track Justice_Little_League.mp3 out=900 -transition mix a_track=0 b_track=1 -consumer avformat:audiotest.mp4`
 
 
-
+   

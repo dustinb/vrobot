@@ -3,31 +3,23 @@ var fs = require('fs');
 var cheerio = require('cheerio');
 var request = require('request');
 var spider = require('./spider.js');
+var vidjeo = require('./vidjeo.json');
 
-var vidjeo = {
-  pointLength: 10,
-  clipLength: 10,
-  finalLength: 120,
-  videos: [],
-  duration: 0,
-  filesDuration: 0
-};
-
-var vidDir = '/lacie/_Videos_/2017-11-11_Rifle/';
-//var vidDir = '/lacie/_Videos_/2018-04-24_Wolf/';
-//var vidDir = '/lacie/_Videos_/2018-04-14_Snowmass/';
+vidjeo.videos = [];
+vidjeo.duration = 0;
+vidjeo.filesDuration = 0;
 
 // Number of clips needed to get finalLength
 vidjeo.clips = Math.round(vidjeo.finalLength / vidjeo.clipLength);
 
 // Look at some videos
-var filenames = fs.readdirSync(vidDir);
+var filenames = fs.readdirSync(vidjeo.vidDir);
 
 var melt = [];
 
 // Get duration of them
 filenames.forEach(function(file) {
-  var duration = exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + vidDir + file);
+  var duration = exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + vidjeo.vidDir + file);
 
   // Is the vid long enough to make a clip?
   if (duration <= vidjeo.clipLength) return;
@@ -68,7 +60,7 @@ vidjeo.videos.forEach(function(vid) {
     if (! clip.mid) continue;
 
     clip.midSeconds = clip.mid * vidjeo.pointLength;
-    console.log(clip);
+
     // From mid point go back about 1/2 clip length
     clip.startSeconds = clip.midSeconds - (vidjeo.clipLength / 2) + PlusMinus();
     if (clip.startSeconds < 0) clip.startSeconds = 0;
@@ -78,8 +70,8 @@ vidjeo.videos.forEach(function(vid) {
 
     // From mid point go forward about 1/2 clip length
     clip.endSeconds = clip.midSeconds + (vidjeo.clipLength / 2) + PlusMinus();
-    if (clip.endSeconds < clip.startSeconds) {
-      clip.endSeconds = clip.startSeconds;
+    if (clip.endSeconds <= clip.startSeconds) {
+      clip.endSeconds = clip.startSeconds + vidjeo.clipLength;
     }
     date = new Date(null);
     date.setSeconds(clip.endSeconds);
@@ -92,7 +84,7 @@ vidjeo.videos.forEach(function(vid) {
 
     vidjeo.duration += clip.duration;
 
-    clip.melt = vidDir + vid.filename + ' in=' + clip.start + '.00 out=' + clip.end + '.00';
+    clip.melt = vidjeo.vidDir + vid.filename + ' in=' + clip.start + '.00 out=' + clip.end + '.00';
     vid.clips.push(clip);
   }
 
@@ -142,12 +134,16 @@ spider.getURL('http://freemusicarchive.org/search/?adv=1&quicksearch=&search-gen
     var outfile = './vidjeo-' + now.getTime() + "-" + vidjeo.mp3;
 
     // Keep original audio?
-    melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=-10dB -transition mix a_track=0 b_track=1');
+    if (vidjeo.keepAudio) {
+      melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel + ' -transition mix a_track=0 b_track=1');
+    } else {
+      melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel);
+    }
     melt.push(' -consumer avformat:' + outfile + '.mp4');
 
     vidjeo.melt = 'melt ' + melt.join(' ');
 
-    let data = JSON.stringify(vidjeo);
+    let data = JSON.stringify(vidjeo, null, 2);
     fs.writeFileSync(outfile + '.json', data);
 
     res.pipe(fs.createWriteStream('./' + vidjeo.mp3));
