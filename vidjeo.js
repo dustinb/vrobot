@@ -1,9 +1,8 @@
-var exec = require('child_process').execSync;
-var fs = require('fs');
-var cheerio = require('cheerio');
-var request = require('request');
-var spider = require('./spider.js');
-var vidjeo = require('./vidjeo.json');
+var exec    = require('child_process').execSync;
+var fs      = require('fs');
+var vidjeo  = require('./vidjeo.json');
+var async   = require('async');
+var music   = require('./music.js');
 
 vidjeo.videos = [];
 vidjeo.duration = 0;
@@ -104,52 +103,37 @@ date.setSeconds(vidjeo.duration);
 // Subtracting some frames for transitions
 var audioEnd = vidjeo.duration * 60 - (vidjeo.videos.length * 120); // 60 Frames per second;
 
-var page = Random(1,240);
-spider.getURL('http://freemusicarchive.org/search/?adv=1&quicksearch=&search-genre=Hip-Hop&duration_from=02%3A00&duration_to=04%3A00&sort=track_date_published&d=1&page=' + page, function(html) {
-  var $ = cheerio.load(html);
-  var rand = Random(0, $('div.play-item').length - 1);
+// Get the audio track then finish up the command
+async.series([function(callback) {
+  music.randomSong(function(song) {
+    vidjeo.mp3 = song.filename;
+    callback();
+  })
+}, function(callback) {
+  // Make a new filename
+  var now = new Date();
+  var outfile = './vidjeo-' + now.getTime() + "-" + vidjeo.mp3;
 
-  // Cheerio doesn't have :eq selector
-  $('div.play-item').each(function() {
-    if (rand < 0) return;
-    vidjeo.artist = $(this).find('.ptxt-artist a').text();
-    vidjeo.track = $(this).find('.ptxt-track a').text();
-    vidjeo.download = $(this).find('a.icn-arrow').attr('href');
-    rand--;
-  });
+  // Fade to black
+  melt.push('colour:black out=' + audioEnd + ' -mix 25 -mixer luma');
 
-  // https://stackoverflow.com/questions/20132064/node-js-download-file-using-content-disposition-as-filename
+  // Keep original audio?
+  if (vidjeo.keepAudio) {
+    melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel + ' -transition mix a_track=0 b_track=1');
+  } else {
+    melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel);
+  }
+  melt.push(' -consumer avformat:' + outfile + '.mp4');
 
-  // Start the download
-  var r = request(vidjeo.download);
+  vidjeo.melt = 'melt ' + melt.join(' ');
 
-  // RegExp to extract the filename from Content-Disposition
-  var regexp = /filename="(.*)"/gi;
+  let data = JSON.stringify(vidjeo, null, 2);
+  fs.writeFileSync(outfile + '.json', data);
 
-  r.on('response',  function (res) {
-    vidjeo.mp3 = regexp.exec( res.headers['content-disposition'] )[1];
+  console.log(vidjeo);
+  callback();
+}]);
 
-    // Make a new filename
-    var now = new Date();
-    var outfile = './vidjeo-' + now.getTime() + "-" + vidjeo.mp3;
-
-    // Keep original audio?
-    if (vidjeo.keepAudio) {
-      melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel + ' -transition mix a_track=0 b_track=1');
-    } else {
-      melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel);
-    }
-    melt.push(' -consumer avformat:' + outfile + '.mp4');
-
-    vidjeo.melt = 'melt ' + melt.join(' ');
-
-    let data = JSON.stringify(vidjeo, null, 2);
-    fs.writeFileSync(outfile + '.json', data);
-
-    res.pipe(fs.createWriteStream('./' + vidjeo.mp3));
-    console.log(vidjeo);
-  });
-});
 
 function getPoint(points, start) {
   // Use slice to find the max in a section

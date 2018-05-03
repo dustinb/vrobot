@@ -9,7 +9,7 @@
   "author": "Dustin Butler <dustin@fivetechnology.com>",
   "license": "ISC",
   "dependencies": {
-    "await": "^0.2.6",
+    "async": "^2.6.0",
     "cheerio": "^1.0.0-rc.2",
     "md5": "^2.2.1",
     "request": "^2.85.0"
