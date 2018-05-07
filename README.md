@@ -2,7 +2,7 @@
 
 Take a folder with some videos (maybe photos) in it, select some parts of them and add some music.  Here is sample, created randomly from 35 minutes of video.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/DQTqi8_A2sc?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+https://www.youtube.com/embed/DQTqi8_A2sc?rel=0
 
 # Installation
 
