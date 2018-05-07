@@ -1,4 +1,5 @@
-var exec    = require('child_process').execSync;
+var execSync    = require('child_process').execSync;
+var exec = require('child_process').exec;
 var fs      = require('fs');
 var vidjeo  = require('./vidjeo.json');
 var async   = require('async');
@@ -18,7 +19,12 @@ var melt = [];
 
 // Get duration of them
 filenames.forEach(function(file) {
-  var duration = exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + vidjeo.vidDir + file);
+  console.log(file);
+  try {
+    var duration = execSync('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + vidjeo.vidDir + file);
+  } catch(e) {
+    return;
+  }
 
   // Is the vid long enough to make a clip?
   if (duration <= vidjeo.clipLength) return;
@@ -50,6 +56,9 @@ var j = 0;
 vidjeo.videos.forEach(function(vid) {
 
   var lastMid = 0;
+
+  // TODO: May want 1 clip per video?
+  if (vidjeo.duration > vidjeo.finalLength) return;
 
   for(var c=0; c<vid.duration / vidjeo.clipPerDuration; c++) {
     // Find the most weighted point of the ones that are unused
@@ -115,7 +124,7 @@ async.series([function(callback) {
   var outfile = './vidjeo-' + now.getTime() + "-" + vidjeo.mp3;
 
   // Fade to black
-  melt.push('colour:black out=' + audioEnd + ' -mix 25 -mixer luma');
+  melt.push('colour:black out=200 -mix 180 -mixer luma');
 
   // Keep original audio?
   if (vidjeo.keepAudio) {
@@ -131,6 +140,11 @@ async.series([function(callback) {
   fs.writeFileSync(outfile + '.json', data);
 
   console.log(vidjeo);
+
+  //exec('melt', melt, function() {
+  //  console.log('done');
+  //});
+
   callback();
 }]);
 

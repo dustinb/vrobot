@@ -4,6 +4,8 @@ Take a folder with some videos (maybe photos) in it, select some parts of them a
 
 # Installation
 
+Will need nodejs, ffmpeg, and the melt command
+
 ```
 apt-get update
 apt-get install git ffmpeg melt curl sudo
@@ -18,22 +20,47 @@ npm install
 
 # Make A Video
 
-`node vidjeo [directory]`
+Create a vidjeo config file.  Works best if there are only videos in the directory.  At the least set `clipLength` and
+`finalLength` in seconds.
+
+```json
+{
+  "vidDir": "/lacie/_Videos_/2017-11-11_Rifle/",
+  "pointLength": 20,
+  "clipLength": 9,
+  "finalLength": 120,
+  "keepAudio": true,
+  "audioLevel": "-5dB",
+}
+```
+
+Run the robot
+
+`node vidjeo`
+
+Run the melt command that is output
+
+`melt /lacie/_Videos_/2017-11-11_Rifle/FILE0028.MP4 in=00:01:13.00 out=00:01:24.00 /lacie/_Videos_/2017-11-11_Rifle/FILE0029.MP4 in=00:00:13.00 out=00:00:25.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0030.MP4 in=00:03:59.00 out=00:04:08.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0031.MP4 in=00:00:52.00 out=00:01:03.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0032.MP4 in=00:05:53.00 out=00:06:06.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0032.MP4 in=00:07:35.00 out=00:07:43.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:03:32.00 out=00:03:40.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:17:38.00 out=00:17:46.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:18:18.00 out=00:18:24.00  -mix 120 -mixer matte /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:21:51.00 out=00:22:06.00  -mix 120 -mixer matte /lacie/_Videos_/2017-11-11_Rifle/FILE0034.MP4 in=00:02:31.00 out=00:02:40.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0035.MP4 in=00:06:38.00 out=00:06:42.00  -mix 120 -mixer matte /lacie/_Videos_/2017-11-11_Rifle/FILE0035.MP4 in=00:07:37.00 out=00:07:44.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0035.MP4 in=00:09:13.00 out=00:09:21.00  -mix 120 -mixer composite colour:black out=200 -mix 180 -mixer luma -audio-track Shuvoyoshi__Anitek_-_31_-_Negatives.mp3 out=6660 -attach-track volume level=-5dB -transition mix a_track=0 b_track=1  -consumer avformat:./vidjeo-1525732606267-Shuvoyoshi__Anitek_-_31_-_Negatives.mp3.mp4`
 
 # Configuration
 
-| Config      | Description                              | Default |
-|-------------|------------------------------------------|---------|   
-| pointLength | Chop the video into parts of this length | 5       |
-| clipLength  | Preferred clip length between transitions| 10      |
-| finalLength | Approx. final video length in seconds    | 120     |
-| _keepAudio_ | Keep the original audio track            | true    | 
-| _genre_     | Type of music                            | Hip Hop |
+| Config      | Description                                        |
+|-------------|----------------------------------------------------|   
+| pointLength | Chop the video into parts of this length           |
+| clipLength  | Preferred clip length between transitions          |
+| finalLength | Approx. final video length in seconds              |
+| _keepAudio_ | Keep the original audio track                      |
+| audioLevel  | Audo level of the added music track 0dB is default | 
 
 # MLT Framework
 
 Uses [ffmpeg/ffprobe](https://www.ffmpeg.org/) for getting video information and the melt command from [MLT Framework](https://www.mltframework.org/) 
 to do the video editing. 
+
+# Free Music Archive
+
+Music is downloaded from [Free Music Archive](http://freemusicarchive.org/) randomly.  Currently it's hard coded to use
+Hip Hop genre.
 
 # Clip Selection
 
@@ -45,27 +72,4 @@ Idea is to add weighting based on _speed_, _altitude change_, and _gyro_ data.  
 
 MLT provides other filers like speed up that can be used to add variety based on the data.
 
-# Various Commands
-
-Cut part of video
-
-`melt FILE0004.MP4 in=00:05:00.00 out=00:05:15.00 -consumer avformat:FILE0004.00.05.00-00.05.15.mp4`
-
-Add 2 videos with transition and stabalize filter
-
-`melt cut1.mp4 cut2.mp4 -mix 100 -mixer luma -filter videostab2 -consumer avformat:splice.mp4`
-
-Video duration, remove -sexagesimal for seconds
-
-`ffprobe -v error -show_entries format=duration -sexagesimal -of default=noprint_wrappers=1:nokey=1 cut1.mp4`
-
-Number of frames
-
-`ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 FILE0028.MP4`
-
-Adding audio track and keeping the original by mixing them
-
-`melt FILE0004.00.05.00-00.05.15.mp4 -audio-track Justice_Little_League.mp3 out=900 -transition mix a_track=0 b_track=1 -consumer avformat:audiotest.mp4`
-
-
-   
+ 
