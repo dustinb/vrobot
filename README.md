@@ -31,6 +31,7 @@ Create a vidjeo config file.  Works best if there are only videos in the directo
   "finalLength": 120,
   "keepAudio": true,
   "audioLevel": "-5dB",
+  "spawn": false
 }
 ```
 
@@ -38,7 +39,8 @@ Run the robot
 
 `node vidjeo`
 
-Run the melt command that is output
+Wait for the video to be created.  If `spawn` is false the melt command will not be spawned.  A .json file is created
+with information for running the melt command yourself.
 
 `melt /lacie/_Videos_/2017-11-11_Rifle/FILE0028.MP4 in=00:01:13.00 out=00:01:24.00 /lacie/_Videos_/2017-11-11_Rifle/FILE0029.MP4 in=00:00:13.00 out=00:00:25.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0030.MP4 in=00:03:59.00 out=00:04:08.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0031.MP4 in=00:00:52.00 out=00:01:03.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0032.MP4 in=00:05:53.00 out=00:06:06.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0032.MP4 in=00:07:35.00 out=00:07:43.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:03:32.00 out=00:03:40.00  -mix 120 -mixer region /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:17:38.00 out=00:17:46.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:18:18.00 out=00:18:24.00  -mix 120 -mixer matte /lacie/_Videos_/2017-11-11_Rifle/FILE0033.MP4 in=00:21:51.00 out=00:22:06.00  -mix 120 -mixer matte /lacie/_Videos_/2017-11-11_Rifle/FILE0034.MP4 in=00:02:31.00 out=00:02:40.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0035.MP4 in=00:06:38.00 out=00:06:42.00  -mix 120 -mixer matte /lacie/_Videos_/2017-11-11_Rifle/FILE0035.MP4 in=00:07:37.00 out=00:07:44.00  -mix 120 -mixer composite /lacie/_Videos_/2017-11-11_Rifle/FILE0035.MP4 in=00:09:13.00 out=00:09:21.00  -mix 120 -mixer composite colour:black out=200 -mix 180 -mixer luma -audio-track Shuvoyoshi__Anitek_-_31_-_Negatives.mp3 out=6660 -attach-track volume level=-5dB -transition mix a_track=0 b_track=1  -consumer avformat:./vidjeo-1525732606267-Shuvoyoshi__Anitek_-_31_-_Negatives.mp3.mp4`
 

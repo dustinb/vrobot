@@ -1,5 +1,7 @@
 var execSync    = require('child_process').execSync;
-var exec = require('child_process').exec;
+
+const spawn = require('child_process').spawn;
+
 var fs      = require('fs');
 var vidjeo  = require('./vidjeo.json');
 var async   = require('async');
@@ -11,6 +13,8 @@ vidjeo.filesDuration = 0;
 
 // Number of clips needed to get finalLength
 vidjeo.clips = Math.round(vidjeo.finalLength / vidjeo.clipLength);
+
+// If sftp is used sync down the video files first
 
 // Look at some videos
 var filenames = fs.readdirSync(vidjeo.vidDir);
@@ -32,7 +36,7 @@ filenames.forEach(function(file) {
   var vid = {filename: file, duration: parseInt(duration), clips: []};
 
   // Create points
-  vid.points = new Array(Math.round(vid.duration / vidjeo.pointLength));
+  vid.points = new Array(vid.duration);
 
   // Add weight randomly
   RandomWeight(vid);
@@ -48,9 +52,10 @@ var transitions = ['composite',
   'luma', 'matte', 'region', 'affine'];
 
 // Approx # of clips we ned to get finalLength
-vidjeo.numClips = vidjeo.finalLength / vidjeo.clipLength;
+vidjeo.numClips = Math.round(vidjeo.finalLength / vidjeo.clipLength);
 
-vidjeo.clipPerDuration = vidjeo.filesDuration / vidjeo.numClips;
+// Need a clip for every X amount of seconds
+vidjeo.clipEvery = Math.round(vidjeo.filesDuration / vidjeo.numClips);
 
 var j = 0;
 vidjeo.videos.forEach(function(vid) {
@@ -60,14 +65,17 @@ vidjeo.videos.forEach(function(vid) {
   // TODO: May want 1 clip per video?
   if (vidjeo.duration > vidjeo.finalLength) return;
 
-  for(var c=0; c<vid.duration / vidjeo.clipPerDuration; c++) {
+  for(var c=0; c<vid.duration; c+=vidjeo.clipEvery) {
     // Find the most weighted point of the ones that are unused
-    var clip = {mid: getPoint(vid.points, lastMid)};
+    // TODO: If we know we need x clips find one in each section of the video
+    // TODO: Which means getPoint needs a start and end point and should look for max
+    // Possibly set points to zero so they don't get used again
+    var clip = {midSeconds: getPoint(vid.points, c)};
 
     // Didn't find a mid, maybe ran out of points?
-    if (! clip.mid) continue;
+    if (! clip.midSeconds) continue;
 
-    clip.midSeconds = clip.mid * vidjeo.pointLength;
+    //clip.midSeconds = clip.mid * vidjeo.pointLength;
 
     // From mid point go back about 1/2 clip length
     clip.startSeconds = clip.midSeconds - (vidjeo.clipLength / 2) + PlusMinus();
@@ -88,7 +96,7 @@ vidjeo.videos.forEach(function(vid) {
     clip.duration = clip.endSeconds - clip.startSeconds;
 
     // Move point index past our current seletion
-    lastMid = clip.mid + parseInt(clip.duration / vidjeo.pointLength) + 2;
+    //lastMid = clip.mid + parseInt(clip.duration / vidjeo.pointLength) + 2;
 
     vidjeo.duration += clip.duration;
 
@@ -99,7 +107,8 @@ vidjeo.videos.forEach(function(vid) {
   for(var i=0; i<vid.clips.length; i++) {
     melt.push(vid.clips[i].melt);
     if (j>0) {
-      melt.push(' -mix 120 -mixer ' + transitions[Random(0, transitions.length - 1)]);
+      melt.push('-mix 120');
+      melt.push('-mixer ' + transitions[Random(0, transitions.length - 1)]);
     }
     j++;
   }
@@ -110,10 +119,17 @@ date.setSeconds(vidjeo.duration);
 
 // End frame for audio, doesn't seem to support 00:23:15 type format.
 // Subtracting some frames for transitions
-var audioEnd = vidjeo.duration * 60 - (vidjeo.videos.length * 120); // 60 Frames per second;
+// TODO: Think we need to look at actual fps of source videos
+var audioEnd = vidjeo.duration * 60 - ((vidjeo.videos.length + 2) * 120); // 60 Frames per second;
+var audioEnd = vidjeo.duration * 60; // 60 Frames per second;
 
 // Get the audio track then finish up the command
 async.series([function(callback) {
+  // Manual audio file specified
+  if (vidjeo.mp3) {
+    callback();
+    return;
+  }
   music.randomSong(function(song) {
     vidjeo.mp3 = song.filename;
     callback();
@@ -134,16 +150,25 @@ async.series([function(callback) {
   }
   melt.push(' -consumer avformat:' + outfile + '.mp4');
 
-  vidjeo.melt = 'melt ' + melt.join(' ');
+  vidjeo.meltCommand = 'melt ' + melt.join(' ');
 
   let data = JSON.stringify(vidjeo, null, 2);
   fs.writeFileSync(outfile + '.json', data);
 
-  console.log(vidjeo);
+  if (typeof vidjeo.spawn == 'undefined' || vidjeo.spawn) {
+    var process = spawn('melt', melt, {shell: '/bin/bash'});
 
-  //exec('melt', melt, function() {
-  //  console.log('done');
-  //});
+    process.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    });
+
+    process.stderr.on('data', (data) => {
+      console.log(`stderr: ${data}`);
+    });
+
+  } else {
+    console.log(vidjeo.meltCommand);
+  }
 
   callback();
 }]);
@@ -151,7 +176,9 @@ async.series([function(callback) {
 
 function getPoint(points, start) {
   // Use slice to find the max in a section
-  var max = Math.max(...points.slice(start));
+  var max = Math.max(...points.slice(start, start + vidjeo.clipEvery))
+
+  // Return the index of max location
   for(var i=start; i<points.length; i++) {
     if (points[i] == max) return i;
   }
@@ -173,6 +200,10 @@ function RandomWeight(vid, min, max) {
   if (typeof min == 'undefined') min = 0;
 
   for(var i=0; i < vid.points.length; i++) {
-    vid.points[i] = Random(min, max);
+    if (i % vidjeo.pointLength == 0) {
+      vid.points[i] = Random(min, max);
+    } else {
+      vid.points[i] = 0;
+    }
   }
 }

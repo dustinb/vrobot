@@ -1,9 +1,18 @@
 {
-  "vidDir": "/lacie/_Videos_/2017-11-11_Rifle/",
-  "pointLength": 20,
-  "clipLength": 9,
-  "finalLength": 120,
+  "vidDir1": "/lacie/_Videos_/2017-11-11_Rifle/",
+  "vidDir8": "/lacie/_Videos_/2018-04-14_Snowmass/",
+  "vidDir6": "/lacie/_Videos_/2018-06-02_RAT/",
+  "vidDir7": "/lacie/_Videos_/2018-05-19_BuzzardGulch/",
+  "vidDir5": "/lacie/_Videos_/2018-05-04_Wolf/",
+  "vidDir4": "/lacie/_Videos_/2018-05-08_CattleCreek/",
+  "vidDir4": "/lacie/_Videos_/2012-05_Moab_White_Rim/",
+  "vidDir": "/lacie/_Videos_/2011-10_JacksonCountyWI/",
+  "pointLength": 10,
+  "clipLength": 15,
+  "finalLength": 10,
   "keepAudio": true,
-  "audioLevel": "-5dB",
-  "genre": "Hip Hop"
+  "audioLevel": "0dB",
+  "genre": "Hip Hop",
+  "mp3": "SWERTE_AND_MADROTTER_-_12_-_12_YES.mp3",
+  "spawn": true
 }
