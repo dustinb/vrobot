@@ -22,10 +22,12 @@ var filenames = fs.readdirSync(vidjeo.vidDir);
 var melt = [];
 
 // Get duration of them
+// Get the frame per second.  Assuming all source video are the same
 filenames.forEach(function(file) {
   console.log(file);
   try {
     var duration = execSync('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + vidjeo.vidDir + file);
+    // var vidjeo.fps = execSync('ffprobe -v 0 -of csv=p=0 -select_streams 0 -show_entries stream=r_frame_rate ' + vidjeo.vidDir + file);
   } catch(e) {
     return;
   }
@@ -58,6 +60,7 @@ vidjeo.numClips = Math.round(vidjeo.finalLength / vidjeo.clipLength);
 vidjeo.clipEvery = Math.round(vidjeo.filesDuration / vidjeo.numClips);
 
 var j = 0;
+vidjeo.clips = 0;
 vidjeo.videos.forEach(function(vid) {
 
   var lastMid = 0;
@@ -101,7 +104,9 @@ vidjeo.videos.forEach(function(vid) {
     vidjeo.duration += clip.duration;
 
     clip.melt = vidjeo.vidDir + vid.filename + ' in=' + clip.start + '.00 out=' + clip.end + '.00';
+    // clip.melt = vidjeo.vidDir + vid.filename + ' volume gain=' + vidjeo.audioLevel + 'in=' + clip.start + '.00 out=' + clip.end + '.00';
     vid.clips.push(clip);
+    vidjeo.clips++;
   }
 
   for(var i=0; i<vid.clips.length; i++) {
@@ -117,17 +122,18 @@ vidjeo.videos.forEach(function(vid) {
 date = new Date(null);
 date.setSeconds(vidjeo.duration);
 
-// End frame for audio, doesn't seem to support 00:23:15 type format.
-// Subtracting some frames for transitions
-// TODO: Think we need to look at actual fps of source videos
-var audioEnd = vidjeo.duration * 60 - ((vidjeo.videos.length + 2) * 120); // 60 Frames per second;
-var audioEnd = vidjeo.duration * 60; // 60 Frames per second;
+// Trying to calculate the actual length of the video in frames. Audio doesn't seem to support 00:23:15 type format for
+// in and out. Take length minus some frames, 2-3 seconds of mixing.
+vidjeo.fps = 30;
+var audioEnd = vidjeo.duration * vidjeo.fps - (vidjeo.clips * (2 * vidjeo.fps)); // 3 second mix
+//var audioEnd = vidjeo.duration * 60; // 60 Frames per second;
 
 // Get the audio track then finish up the command
 async.series([function(callback) {
   // Manual audio file specified
   if (vidjeo.mp3) {
     callback();
+
     return;
   }
   music.randomSong(function(song) {
@@ -145,8 +151,10 @@ async.series([function(callback) {
   // Keep original audio?
   if (vidjeo.keepAudio) {
     melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel + ' -transition mix a_track=0 b_track=1');
+    //melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track  -transition mix a_track=0 b_track=1');
   } else {
     melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track volume level=' + vidjeo.audioLevel);
+    //melt.push('-audio-track ' + vidjeo.mp3 + ' out=' + audioEnd + ' -attach-track');
   }
   melt.push(' -consumer avformat:' + outfile + '.mp4');
 

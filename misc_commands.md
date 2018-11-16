@@ -24,3 +24,5 @@ Adding text to video
 
 `-attach dynamictext:"Some text I want to show" bgcolour=0x00000000 in=50 out=100`
 
+melt /lacie/_Videos_/2011-10_JacksonCountyWI/FILE0018.MOV in=00:03:53.00 out=00:04:53.00 -audio-track SWERTE_AND_MADROTTER_-_12_-_12_YES.mp3 volume gain=-2dB out=312 -attach-track -transition mix a_track=0 b_track=1  -consumer avformat:test.mp4
+
