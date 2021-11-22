@@ -6,31 +6,34 @@ var request = require('request');
 module.exports = {
 
   randomSong: function (callback) {
-    var page = Random(1, 400);
-    spider.getURL('http://freemusicarchive.org/genre/Hip-Hop/?sort=track_date_published&d=1&page=' + page, function (html) {
+    var page = Random(1, 200);
+    const url = 'https://freemusicarchive.org/genre/Hip-Hop?sort=track_date_published&d=1&page=' + page;
+    console.log(url);
+    spider.getURL(url, function (html) {
       var $ = cheerio.load(html);
+      console.log("found items", $('div.play-item').length);
       var rand = Random(0, $('div.play-item').length - 1);
       var song = {};
 
       // Cheerio doesn't have :eq selector
       $('div.play-item').each(function () {
         if (rand < 0) return;
-        song.artist = $(this).find('.ptxt-artist a').text();
-        song.track = $(this).find('.ptxt-track a').text();
-        song.download = $(this).find('a.icn-arrow').attr('href');
+        song.data = $(this).data('track-info');
+        song.artist = song.data.artistName;
+        song.track = song.data.title;
+        song.download = song.data.fileUrl
         rand--;
       });
 
       // https://stackoverflow.com/questions/20132064/node-js-download-file-using-content-disposition-as-filename
 
       // Start the download
+      console.log(song);
+      // return;
       var r = request(song.download);
 
-      // RegExp to extract the filename from Content-Disposition
-      var regexp = /filename="(.*)"/gi;
-
       r.on('response', function (res) {
-        song.filename = regexp.exec(res.headers['content-disposition'])[1];
+        song.filename = song.download.substring(song.download.lastIndexOf('/')+1);
         res.pipe(fs.createWriteStream(song.filename));
         callback(song);
       });

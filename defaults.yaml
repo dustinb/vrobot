@@ -1,0 +1,10 @@
+vidDir: /videos/
+minVideoDuration: 30
+pointLength: 5
+clipLength: 10
+finalLength: 60
+keepAudio: true
+audioLevel: 1.5dB
+genre: Hip Hop
+genres: ["Hip Hop", "Country"]
+spawn: true

@@ -8,11 +8,15 @@ vidDir6: /Volumes/OpenShare/_Videos_2018-05-08_CattleCreek/
 vidDir7: /Volumes/OpenShare/_Videos_/2012-05_Moab_White_Rim/
 vidDir8: /Volumes/OpenShare/_Videos_/2011-10_JacksonCountyWI/
 vidDir9: /Volumes/OpenShare/_Videos_/2012-10-28_Rifle_Dirt_Biking/
-vidDir: /Volumes/CNTR_ROAM2/DCIM/100MEDIA/
-minVideoDuration: 180
-pointLength: 1
-clipLength: 10
-finalLength: 180
+vidDir12: /Volumes/OpenShare/_Videos_/2019-02-23_Buttermilk/
+vidDir13: /Volumes/OpenShare/_Videos_/2019-03-31_DeBeque/
+vidDir: video_test/
+vidDir10: /Volumes/CNTR_ROAM2/DCIM/100MEDIA/
+vidDir11: /Volumes/CNTR_ROAM2/DCIM/2018-12-01_Sunlight/
+minVideoDuration: 120
+pointLength: 5
+clipLength: 20
+finalLength: 120
 keepAudio: true
 audioLevel: 1.5dB
 genre: Hip Hop
@@ -21,4 +25,5 @@ mp31: "SWERTE_AND_MADROTTER_-_m12_-_12_YES.mp3"
 mp32: C-Doc_-_07_-_Life_Slow_Down_Instrumental.mp3
 mp33: 51_-_12_-_Boreach_Meachrayut.mp3
 mp34: Cheese_N_Pot-C_-_07_-_The_Raps_Well_TSP_Remixes_Well.mp3
-spawn: true
+spawn: false
+

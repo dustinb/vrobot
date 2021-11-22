@@ -5,6 +5,14 @@ Take a folder with some videos (maybe photos) in it, select some parts of them a
 
 https://www.youtube.com/watch?v=DQTqi8_A2sc
 
+# Run with Docker
+
+Replace `pwd`/video_test with a directory containing videos
+
+```
+docker run --rm -v `pwd`/video_test:/videos oldbute/lazyvid:latest
+```
+
 # Installation
 
 Will need nodejs, ffmpeg, and the melt command
@@ -27,9 +35,9 @@ brew install git?
 
 ## Get the code
 ```
-git clone https://github.com/dustinb/lazyvid.git
+git clone https://github.com/dustinb/vrobot.git
 cd vrobot
-npm install
+npm installgit 
 ```
 
 # Make A Video

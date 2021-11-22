@@ -3,8 +3,19 @@ spawn = require('child_process').spawn;
 yaml = require('js-yaml');
 fs = require('fs');
 
-// TODO: Allow a config as parameter
-vidjeo = yaml.safeLoad(fs.readFileSync('lazy.yaml', 'utf8'));
+// If the lazyvid.yaml exists use that, otherwise assume running from docker
+// and use the /videos directory
+if (fs.existsSync('lazy.yaml')) {
+  vidjeo = yaml.safeLoad(fs.readFileSync('lazy.yaml', 'utf8'));
+} else {
+  // Copy our default settings
+  if (! fs.existsSync('/videos/lazy.yaml')) {
+    vidjeo = yaml.safeLoad(fs.readFileSync('defaults.yaml'));
+  } else {
+    vidjeo = yaml.safeLoad(fs.readFileSync('/videos/lazy.yaml', 'utf8'));
+  }
+}
+
 async   = require('async');
 music   = require('./free-music-archive.js');
 
@@ -18,6 +29,7 @@ vidjeo.clips = Math.round(vidjeo.finalLength / vidjeo.clipLength);
 // If sftp is used sync down the video files first
 
 // Look at some videos
+console.log("Reading video files:", vidjeo.vidDir)
 var filenames = fs.readdirSync(vidjeo.vidDir);
 
 var melt = [];
@@ -127,7 +139,8 @@ date.setSeconds(vidjeo.duration);
 
 // Trying to calculate the actual length of the video in frames. Audio doesn't seem to support 00:23:15 type format for
 // in and out. Take length minus some frames, 2-3 seconds of mixing.
-vidjeo.fps = 30;
+// @todo get frames from video
+vidjeo.fps = 60;
 var audioEnd = vidjeo.duration * vidjeo.fps - (vidjeo.clips * (2 * vidjeo.fps)); // 3 second mix
 //var audioEnd = vidjeo.duration * 60; // 60 Frames per second;
 
@@ -146,7 +159,7 @@ async.series([function(callback) {
 }, function(callback) {
   // Make a new filename
   var now = new Date();
-  var outfile = './videos/vidjeo-' + now.getTime() + "-" + vidjeo.mp3;
+  var outfile = vidjeo.vidDir + '/vidjeo-' + now.getTime() + "-" + vidjeo.mp3;
 
   // Fade to black
   melt.push('colour:black out=200 -mix 180 -mixer luma');
